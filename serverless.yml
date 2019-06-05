@@ -1,40 +1,85 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
-service: serverless-go-boilerplate
+tenant: wjklos
+app: sphere
+service: sphere-seed
 
 provider:
   name: aws
   runtime: go1.x
   stage: dev
-  region: ap-southeast-1
+  region: us-east-2
+  cfnRole: arn:aws:iam::079469020281:role/ServerlessCloudFormationRole
 
 package:
- individually: true
- exclude:
-   - ./**
+  individually: true
+  exclude:
+    - ./**
+  include:
+    - ./bin/handlers/**
 
 functions:
-  hello:
-    handler: bin/handlers/hello
-    package:
-     include:
-       - ./bin/handlers/hello
+  addSeed:
+    handler: bin/handlers/addSeed
+    description: "Adds a Seed to the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/addSeed
     events:
-      - http:
-          path: hello
-          method: get
-          cors: true
-
-# resources:
-#   Resources: # Supporting AWS services
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CRUDSeedQ
+              - Arn
+  updateSeed:
+    handler: bin/handlers/updateSeed
+    description: "Updates a Seed to the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/updateSeed
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CRUDSeedQ
+              - Arn
+  deleteSeed:
+    handler: bin/handlers/deleteSeed
+    description: "Deletes a Seed from the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/deleteSeed
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CRUDSeedQ
+              - Arn
+  getSeed:
+    handler: bin/handlers/getSeed
+    description: "Retrieves a Seed from the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/getSeed
+  listSeeds:
+    handler: bin/handlers/listSeeds
+    description: "Lists all the specified Seeds in the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/listSeeds
+  loadSeeds:
+    handler: bin/handlers/loadSeeds
+    description: "Loads bulk Seeds in to the database."
+    # package:
+    #  include:
+    #    - ./bin/handlers/loadSeeds
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CRUDSeedQ
+              - Arn
+resources:
+  Resources:
+    CRUDSeedQ:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "CRUDSeedQ"
